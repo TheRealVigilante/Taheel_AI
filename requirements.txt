@@ -1,0 +1,21 @@
+# Core Framework & Validation
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.1
+
+# AI / LLM Providers
+openai>=1.30.0
+
+# Ingestion, Document Processing & OCR
+pymupdf>=1.24.0
+pypdf>=4.2.0
+
+# API & Web UI
+fastapi>=0.111.0
+uvicorn>=0.30.0
+streamlit>=1.35.0
+jinja2>=3.1.4
+
+# Utilities & Developer Tooling
+rich>=13.7.0
+pytest>=8.2.0
