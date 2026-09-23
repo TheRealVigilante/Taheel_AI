@@ -6,8 +6,7 @@ python-dotenv>=1.0.1
 # AI / LLM Providers
 openai>=1.30.0
 
-# Ingestion, Document Processing & OCR
-pymupdf>=1.24.0
+# Document Processing & File Support
 pypdf>=4.2.0
 
 # API & Web UI
