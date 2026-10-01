@@ -43,12 +43,7 @@ Rules:
         
         schema = DailyMicroTask.model_json_schema()
         response_format = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "DailyMicroTask",
-                "schema": schema,
-                "strict": True
-            }
+            "type": "json_object"
         }
         
         try:

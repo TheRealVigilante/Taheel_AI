@@ -49,7 +49,7 @@ class JobStatus(BaseModel):
     message: str
     package: Optional[OnboardingPackage] = None
 
-async def process_onboarding_job(
+def process_onboarding_job(
     job_id: str, 
     file_path: str, 
     role_profile: RoleProfile
@@ -61,7 +61,7 @@ async def process_onboarding_job(
         
         # 1. Ingestion
         doc = ingest_manual(file_path)
-        raw_text = doc.full_markdown
+        raw_text = doc.full_text
         
         jobs[job_id]["message"] = "Generating Ontology..."
         jobs[job_id]["progress"] = 30

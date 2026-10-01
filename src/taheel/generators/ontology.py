@@ -50,12 +50,7 @@ Return ONLY a valid JSON matching the exact structure requested."""
         schema = OnboardingOntology.model_json_schema()
         
         response_format = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "OnboardingOntology",
-                "schema": schema,
-                "strict": True
-            }
+            "type": "json_object"
         }
         
         try:

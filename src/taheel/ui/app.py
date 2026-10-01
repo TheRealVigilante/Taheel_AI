@@ -127,7 +127,7 @@ with tabs[1]:
             "Checkpoint": w["manager_checkpoint"] or "—"
         } for w in weeks])
         
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width='stretch', hide_index=True)
 
 # --- TAB 3: DAILY TASKS ---
 with tabs[2]:

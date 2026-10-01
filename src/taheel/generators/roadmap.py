@@ -46,12 +46,7 @@ Return a valid JSON matching the requested structure."""
         
         schema = MasterRoadmap.model_json_schema()
         response_format = {
-            "type": "json_schema",
-            "json_schema": {
-                "name": "MasterRoadmap",
-                "schema": schema,
-                "strict": True
-            }
+            "type": "json_object"
         }
         
         try:
