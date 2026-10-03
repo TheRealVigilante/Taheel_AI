@@ -98,9 +98,27 @@ class LLMProviderManager:
                     kwargs["max_tokens"] = max_tokens
 
                 response = client.chat.completions.create(**kwargs)
-                content = response.choices[0].message.content
+                content = response.choices[0].message.content or ""
+                
+                import re
+                
+                # Clean up markdown code blocks if present
+                content = content.strip()
+                if content.startswith("```json"):
+                    content = content[7:]
+                elif content.startswith("```"):
+                    content = content[3:]
+                if content.endswith("```"):
+                    content = content[:-3]
+                
+                # Strip out <thought>...</thought> tags which reasoning models might inject
+                content = re.sub(r'<thought>.*?</thought>', '', content, flags=re.DOTALL).strip()
+                
+                if not content:
+                    raise ValueError("Received empty content from provider")
+                
                 logger.info("Successfully received completion from provider: %s", provider)
-                return content or ""
+                return content
             except Exception as exc:
                 logger.warning("Provider %s failed: %s. Trying next fallback...", provider, str(exc))
                 errors.append(f"{provider}: {str(exc)}")

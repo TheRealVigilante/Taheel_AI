@@ -26,6 +26,8 @@ Rules:
     def generate(self, day_number: int, week_number: int, phase_number: int, sop: SOPItem, role_profile: RoleProfile) -> DailyMicroTask:
         """Generates a DailyMicroTask for a given SOP."""
         
+        schema_json = json.dumps(DailyMicroTask.model_json_schema(), indent=2)
+        
         prompt = self.SYSTEM_PROMPT.format(
             day_number=day_number,
             week_number=week_number,
@@ -33,6 +35,8 @@ Rules:
             role_title=role_profile.role_title,
             topic=sop.title
         )
+        
+        prompt += f"\n\nCRITICAL: Your JSON output MUST exactly match this JSON Schema:\n{schema_json}"
         
         sop_json = sop.model_dump_json(indent=2)
         
@@ -42,8 +46,14 @@ Rules:
         ]
         
         schema = DailyMicroTask.model_json_schema()
+        # Remove unsupported keys for OpenAI strict schema if needed, but we'll try standard first
         response_format = {
-            "type": "json_object"
+            "type": "json_schema",
+            "json_schema": {
+                "name": "DailyMicroTask",
+                "schema": schema,
+                "strict": False
+            }
         }
         
         try:
@@ -53,6 +63,12 @@ Rules:
                 response_format=response_format
             )
             data = json.loads(raw_response)
+            
+            # Provide robust fallbacks for flaky LLMs
+            if "daily_mission" not in data or not data["daily_mission"]:
+                data["daily_mission"] = f"Master the core operational procedures for {sop.title}."
+            if "hands_on_action_task" not in data or not data["hands_on_action_task"]:
+                data["hands_on_action_task"] = f"Execute the steps outlined in the SOP manual for {sop.title}."
             
             # Ensure day/week/phase/topic match exactly what was requested
             data["day_number"] = day_number

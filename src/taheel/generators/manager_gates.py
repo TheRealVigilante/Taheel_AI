@@ -28,6 +28,8 @@ Return ONLY a valid JSON matching the ManagerEvaluationGate structure."""
     def generate(self, gate_day: int, milestone_name: str, target_phase: int, phase_data: MilestonePhase, role_profile: RoleProfile) -> ManagerEvaluationGate:
         """Generates a ManagerEvaluationGate for a specific milestone day."""
         
+        schema_json = json.dumps(ManagerEvaluationGate.model_json_schema(), indent=2)
+        
         prompt = self.SYSTEM_PROMPT.format(
             gate_day=gate_day,
             milestone_name=milestone_name,
@@ -35,6 +37,8 @@ Return ONLY a valid JSON matching the ManagerEvaluationGate structure."""
             department=role_profile.department,
             company_name=role_profile.company_name
         )
+        
+        prompt += f"\n\nCRITICAL: Your JSON output MUST exactly match this JSON Schema:\n{schema_json}"
         
         phase_json = phase_data.model_dump_json(indent=2)
         

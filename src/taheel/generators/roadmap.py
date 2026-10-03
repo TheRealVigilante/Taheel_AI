@@ -31,10 +31,14 @@ Return a valid JSON matching the requested structure."""
     def generate(self, ontology: OnboardingOntology) -> MasterRoadmap:
         """Generates the MasterRoadmap from the ontology."""
         
+        schema_json = json.dumps(MasterRoadmap.model_json_schema(), indent=2)
+        
         prompt = self.SYSTEM_PROMPT.format(
             role_title=ontology.role_profile.role_title,
             company_name=ontology.role_profile.company_name
         )
+        
+        prompt += f"\n\nCRITICAL: Your JSON output MUST exactly match this JSON Schema:\n{schema_json}"
         
         # Serialize the ontology to feed to the LLM
         ontology_json = ontology.model_dump_json(indent=2)
