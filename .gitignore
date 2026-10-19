@@ -63,5 +63,6 @@ coverage.xml
 Thumbs.db
 
 # Project-specific generated outputs (keep directory structure)
-data/outputs/*
-!data/outputs/.gitkeep
+AGENTS.md
+/data/outputs/fintech_customer_ops_sop/01_Daily_Tasks
+/data/outputs/fintech_customer_ops_sop/02_Manager_Gates
