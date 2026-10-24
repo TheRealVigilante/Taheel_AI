@@ -1,7 +1,11 @@
 import json
+import logging
+import time
 from typing import Dict, Any, List
 from src.taheel.schema import OnboardingOntology, RoleProfile, MilestonePhase
 from src.taheel.llm_provider import llm_manager
+
+logger = logging.getLogger("taheel.generators.ontology")
 
 class OntologyGenerator:
     """
@@ -54,17 +58,30 @@ Return ONLY a valid JSON matching the exact structure requested."""
         }
         
         try:
+            logger.info(
+                "[Ontology] Sending %d chars of manual text to LLM (role: %s @ %s)...",
+                len(raw_text), role_profile.role_title, role_profile.company_name
+            )
+            t0 = time.perf_counter()
             raw_response = llm_manager.generate_chat_completion(
                 messages=messages,
                 temperature=0.1,
                 response_format=response_format
             )
+            logger.info("[Ontology] LLM call complete in %.1fs — parsing JSON...", time.perf_counter() - t0)
             data = json.loads(raw_response)
             
             # The LLM might not include the role_profile exactly as expected, so we ensure it's there
             data["role_profile"] = role_profile.model_dump()
             
-            return OnboardingOntology(**data)
+            ontology = OnboardingOntology(**data)
+            phase_count = len(ontology.phases)
+            sop_count = sum(len(p.target_sops) for p in ontology.phases)
+            logger.info(
+                "[Ontology] ✔ Generated ontology: %d phases, %d SOPs total.",
+                phase_count, sop_count
+            )
+            return ontology
         except json.JSONDecodeError as e:
             raise RuntimeError(f"Failed to generate ontology (JSONDecodeError): {e}. Raw response: {repr(raw_response)}")
         except Exception as e:

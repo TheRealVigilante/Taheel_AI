@@ -1,7 +1,11 @@
 import json
+import logging
+import time
 from typing import Dict, Any, List
 from src.taheel.schema import MasterRoadmap, OnboardingOntology, RoleProfile
 from src.taheel.llm_provider import llm_manager
+
+logger = logging.getLogger("taheel.generators.roadmap")
 
 class RoadmapGenerator:
     """
@@ -54,16 +58,26 @@ Return a valid JSON matching the requested structure."""
         }
         
         try:
+            logger.info(
+                "[Roadmap] Calling LLM for master roadmap (role: %s @ %s)...",
+                ontology.role_profile.role_title, ontology.role_profile.company_name
+            )
+            t0 = time.perf_counter()
             raw_response = llm_manager.generate_chat_completion(
                 messages=messages,
                 temperature=0.2,
                 response_format=response_format
             )
+            logger.info("[Roadmap] LLM call complete in %.1fs — parsing JSON...", time.perf_counter() - t0)
             data = json.loads(raw_response)
             
             # Inject the RoleProfile before instantiating to pass Pydantic validation
             data["role_profile"] = ontology.role_profile.model_dump()
             roadmap = MasterRoadmap(**data)
+            logger.info(
+                "[Roadmap] ✔ Generated roadmap with %d weeks.",
+                len(roadmap.weeks)
+            )
             return roadmap
         except Exception as e:
             raise RuntimeError(f"Failed to generate roadmap: {e}")

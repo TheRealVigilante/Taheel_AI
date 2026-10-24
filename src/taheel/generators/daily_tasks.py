@@ -1,7 +1,11 @@
 import json
+import logging
+import time
 from typing import Dict, Any, List
 from src.taheel.schema import DailyMicroTask, SOPItem, RoleProfile
 from src.taheel.llm_provider import llm_manager
+
+logger = logging.getLogger("taheel.generators.daily_tasks")
 
 class DailyTaskGenerator:
     """
@@ -57,11 +61,17 @@ Rules:
         }
         
         try:
+            logger.info(
+                "[Tasks] Day %d/Wk %d/Ph %d — Generating task for SOP: '%s'...",
+                day_number, week_number, phase_number, sop.title
+            )
+            t0 = time.perf_counter()
             raw_response = llm_manager.generate_chat_completion(
                 messages=messages,
                 temperature=0.2,
                 response_format=response_format
             )
+            logger.info("[Tasks] LLM responded in %.1fs", time.perf_counter() - t0)
             data = json.loads(raw_response)
             
             # Provide robust fallbacks for flaky LLMs

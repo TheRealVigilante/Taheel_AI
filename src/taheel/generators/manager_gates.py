@@ -1,7 +1,11 @@
 import json
+import logging
+import time
 from typing import Dict, Any, List
 from src.taheel.schema import ManagerEvaluationGate, RoleProfile, MilestonePhase
 from src.taheel.llm_provider import llm_manager
+
+logger = logging.getLogger("taheel.generators.manager_gates")
 
 class ManagerGateGenerator:
     """
@@ -53,11 +57,17 @@ Return ONLY a valid JSON matching the ManagerEvaluationGate structure."""
         }
         
         try:
+            logger.info(
+                "[Gates] Generating Day %d gate ('%s') for role: %s...",
+                gate_day, milestone_name, role_profile.role_title
+            )
+            t0 = time.perf_counter()
             raw_response = llm_manager.generate_chat_completion(
                 messages=messages,
                 temperature=0.2,
                 response_format=response_format
             )
+            logger.info("[Gates] LLM responded in %.1fs", time.perf_counter() - t0)
             data = json.loads(raw_response)
             
             # Ensure static fields match
@@ -65,6 +75,8 @@ Return ONLY a valid JSON matching the ManagerEvaluationGate structure."""
             data["milestone_name"] = milestone_name
             data["target_phase"] = target_phase
             
-            return ManagerEvaluationGate(**data)
+            gate = ManagerEvaluationGate(**data)
+            logger.info("[Gates] ✔ Day %d gate generated.", gate_day)
+            return gate
         except Exception as e:
             raise RuntimeError(f"Failed to generate manager gate: {e}")
