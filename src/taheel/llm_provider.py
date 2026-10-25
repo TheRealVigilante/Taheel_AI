@@ -10,6 +10,7 @@ Fallbacks:
 
 from __future__ import annotations
 import os
+import time
 import logging
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
@@ -86,7 +87,10 @@ class LLMProviderManager:
 
             client, model = client_tuple
             try:
-                logger.info("Attempting completion with provider: %s (model: %s)", provider, model)
+                logger.info(
+                    "▶ Calling provider: %s | model: %s | temperature: %.1f",
+                    provider, model, temperature
+                )
                 kwargs: Dict[str, Any] = {
                     "model": model,
                     "messages": messages,
@@ -97,8 +101,24 @@ class LLMProviderManager:
                 if max_tokens:
                     kwargs["max_tokens"] = max_tokens
 
+                t_start = time.perf_counter()
                 response = client.chat.completions.create(**kwargs)
+                elapsed = time.perf_counter() - t_start
+
                 content = response.choices[0].message.content or ""
+
+                # Log token usage if available
+                usage = getattr(response, "usage", None)
+                if usage:
+                    logger.info(
+                        "✔ %s responded in %.1fs | prompt_tokens=%s, completion_tokens=%s, total=%s",
+                        provider, elapsed,
+                        getattr(usage, "prompt_tokens", "?"),
+                        getattr(usage, "completion_tokens", "?"),
+                        getattr(usage, "total_tokens", "?"),
+                    )
+                else:
+                    logger.info("✔ %s responded in %.1fs", provider, elapsed)
                 
                 import re
                 
@@ -117,10 +137,10 @@ class LLMProviderManager:
                 if not content:
                     raise ValueError("Received empty content from provider")
                 
-                logger.info("Successfully received completion from provider: %s", provider)
                 return content
             except Exception as exc:
-                logger.warning("Provider %s failed: %s. Trying next fallback...", provider, str(exc))
+                logger.warning("✘ Provider %s failed (%.1fs): %s. Trying next fallback...",
+                               provider, time.perf_counter() - t_start if 't_start' in dir() else 0, str(exc))
                 errors.append(f"{provider}: {str(exc)}")
 
         raise RuntimeError(
